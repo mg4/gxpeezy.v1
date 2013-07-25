@@ -31,8 +31,8 @@ var app = new gxp.Viewer({
 	portalConfig: {
 		layout: "border",
 		region: "center",
-		renderTo: "map",
-		height: 650,
+		//renderTo: "map",
+		//height: 800,
 
 		// by configuring items here, we don't need to configure
 		// portalItems and save a wrapping container
@@ -48,18 +48,21 @@ var app = new gxp.Viewer({
 			{
 				id: "westpanel",
 				xtype: "panel",
-				layout: "fit",
+				layout: "accordion",
 				region: "west",
 				width: 350,
-				title: "<< Filters",
+				title: "<< Options",
 				titleCollapse: true,
 				collapsible: true,
 				//collapsed: true,
-				forceLayout: true,
+				//forceLayout: true,
 				//collapseMode: "mini",
 				//hideCollapseTool: true,
 				split: true,
-				floating: true
+				floating: true,
+				animCollapse: true,
+				//activeItem: "queryformpanel"
+				//activeItem: 1
 			},
 			{
 				id: "southpanel",
@@ -67,23 +70,24 @@ var app = new gxp.Viewer({
 				layout: "fit",
 				region: "south",
 				border: false,
-				height: 150
+				height: 200
 			}
 		]
 	},
     
 	// configuration of all tool plugins for this application
 	tools: [
-/*
 		{
 			ptype: "gxp_layertree",
 			outputConfig: {
 				id: "tree",
 				border: true,
+				title: "Layers",
 				tbar: [] // add buttons to "tree.bbar" later
 			},
 			outputTarget: "westpanel"
 		},
+/*
 		{
 			ptype: "gxp_addlayers",
 			actionTarget: "tree.tbar"
@@ -138,13 +142,27 @@ var app = new gxp.Viewer({
 			alwaysDisplayOnMap: true, // Always show the vector layer on the map, no button in the grid toolbar
 			outputConfig: {
 				id: "grid",
-				loadMask: true
+				title: "Results",
+				loadMask: true,
 			},
 			controlOptions: {
 				multiple: true,
 				toggle: true
 			},
-			outputTarget: "southpanel"
+			outputTarget: "southpanel",
+/*
+				columns: {
+						FIRST: "First Name",
+						LAST: "Last Name",
+						STREET_NUMBER: "Street Number",
+						STREET_NAME: "Street Name",
+						STREET_TYPE: "Street Type",
+						CITY: "City",
+						STATE: "State",
+						GRID: "Grid",
+						ArrestDate: "Date Arrested",
+					}
+*/
 		},
 	
 		/**
@@ -206,6 +224,12 @@ var app = new gxp.Viewer({
 			id: "queryformpanel",
 			featureManager: "featuremanager",
 			actions: null,
+			actionTarget: null,
+			//actionTarget: ["map.tbar"],
+			outputConfig: {
+				title: "Filters"
+			},
+			outputTarget: "westpanel",
 			filterPanels: [
 				{
 					xtype: "gxp_datefilterpanel",
@@ -276,13 +300,7 @@ var app = new gxp.Viewer({
 					}
 					//process: "datefeature"
 				}
-			],
-			//outputConfig: {
-			//	title: "Query Form"
-			//},
-			//actionTarget: ["map.tbar"],
-			outputTarget: "westpanel",
-			actionTarget: null
+			]
 		}
 	
 	],
@@ -347,17 +365,21 @@ var app = new gxp.Viewer({
 				name: "JPSO:ARMMS",
 				selected: true
 			},
+			{
+				source: "local",
+				name: "LA:parishes_ldotd_2007",
+				visibility: false,
+				selected: true
+			},
 
 			/**
 			 * Background layers
 			 */
-/*
 			{
 				source: "osm",
 				name: "mapnik",
 				group: "background"
 			},
-*/
 			{
 				source: "google",
 				name: "ROADMAP",
