@@ -47,7 +47,6 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 		this.items = [];
 		for(var i=0; i<this.attributes.length; i++) {
 			this.items.push(
-				// composite field for start date
 				{
 					xtype: "compositefield",
 					//width: 400,
@@ -58,16 +57,17 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 							text: this.attributes[i].label + ":",
 							style: "padding-left: 5px; padding-top: 0.3em; width: 75px; text-alight: right"
 						},
-						// Date input field for the start date value
+						// Field for attribute filter
 						{
-							xtype: "textfield",
+							xtype: this.attributes[i].type,
 							name: this.attributes[i].name,
 							ref: "../" + this.attributes[i].name,
 							fieldLabel: this.attributes[i].name
 							//allowBlank: false
 						}
 				
-					]
+					],
+					style: "padding: 2px 0;"
 				}
 			);
 		}
@@ -116,7 +116,7 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 			type = this.attributes[i].type;
 			value = this[this.attributes[i].name].getValue();
 			if(value) {
-				if(type == "number") {
+				if(type == "numberfield" || type == "datefield") {
 					// defualt to EQUAL_TO for number filter
 					filters.push(new OpenLayers.Filter.Comparison(
 						{
@@ -131,7 +131,7 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 						{
 							type: OpenLayers.Filter.Comparison.LIKE,
 							property: this.attributes[i].name,
-							value: "%" + this[this.attributes[i].name].getValue() + "%",
+							value: "*" + this[this.attributes[i].name].getValue() + "*",
 							matchCase: false
 						}
 					));
@@ -141,6 +141,12 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 
 		return filters;
 	},
+
+	clearFields: function() {
+		for(var i=0; i<this.attributes.length; i++) {
+			this[this.attributes[i].name].setValue("");
+		}
+	}
 });
 
 /** api: xtype = gxp_attributefilterpanel */

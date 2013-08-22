@@ -5,10 +5,10 @@
  * @require plugins/LayerTree.js
  * @require plugins/OLSource.js
  * @require plugins/OSMSource.js
- * @require plugins/GoogleSource.js
  * @require plugins/WMSCSource.js
  * @require plugins/Zoom.js
  * @require plugins/ZoomToExtent.js
+ * @require plugins/ZoomToSelectedFeatures.js
  * @require plugins/NavigationHistory.js
  * @require plugins/AddLayers.js
  * @require plugins/RemoveLayer.js
@@ -20,12 +20,13 @@
  * @require plugins/BufferFeature.js
  * @require widgets/DateFilterPanel.js
  * @require widgets/AttributeFilterPanel.js
- * @require widgets/RadiusFilterPanel.js
- * @require plugins/FeatureIntersection.js
- * @require widgets/IntersectionFilterPanel.js
+ * @require widgets/RadiusFilterPanelWithGeocode.js
  * @require overrides/override-ext-ajax.js
- * @require widgets/form/ExtendedDateField.js
+ * @require plugins/WMSGetFeatureInfo.js
+ * @require plugins/Help.js
  */
+
+var defaultLayer;
 
 var app = new gxp.Viewer({
 	portalConfig: {
@@ -50,7 +51,7 @@ var app = new gxp.Viewer({
 				xtype: "panel",
 				layout: "accordion",
 				region: "west",
-				width: 350,
+				width: 375,
 				title: "<< Options",
 				titleCollapse: true,
 				collapsible: true,
@@ -59,8 +60,8 @@ var app = new gxp.Viewer({
 				//collapseMode: "mini",
 				//hideCollapseTool: true,
 				split: true,
-				floating: true,
-				animCollapse: true,
+				//floating: true,
+				animCollapse: true
 				//activeItem: "queryformpanel"
 				//activeItem: 1
 			},
@@ -78,23 +79,26 @@ var app = new gxp.Viewer({
 	// configuration of all tool plugins for this application
 	tools: [
 		{
-			ptype: "gxp_layertree",
-			outputConfig: {
-				id: "tree",
-				border: true,
-				title: "Layers",
-				tbar: [] // add buttons to "tree.bbar" later
-			},
-			outputTarget: "westpanel"
+			ptype: "gxp_zoomtoselectedfeatures",
+			actionTarget: "map.tbar",
+			featureManager: "featuremanager",
+			menuText: "Zoom to selected features"
+		},
+		{
+			ptype: "gxp_wmsgetfeatureinfo",
+			format: "grid",
+			actionTarget: "map.tbar"
+			//defaultAction: 0,
+			//autoActivate: true
 		},
 /*
 		{
 			ptype: "gxp_addlayers",
-			actionTarget: "tree.tbar"
+			actionTarget: "map.tbar"
 		},
 		{
 			ptype: "gxp_removelayer",
-			actionTarget: ["tree.tbar", "tree.contextMenu"]
+			actionTarget: "map.tbar"
 		},
 */
 		{
@@ -109,6 +113,10 @@ var app = new gxp.Viewer({
 			ptype: "gxp_navigationhistory",
 			actionTarget: "map.tbar"
 		},
+		{
+			ptype: "gxp_help",
+			actionTarget: "map.tbar"
+		},
 	
 		/**
 		 * Query Tools:
@@ -120,12 +128,25 @@ var app = new gxp.Viewer({
 			ptype: "gxp_featuremanager",
 			id: "featuremanager",
 			paging: false,
-			autoSetLayer: true,
-			autoLoadFeatures: true,
+			//autoSetLayer: true,
+			//autoLoadFeatures: true,
 			symbolizer: {
-				fillOpacity: 0,
-				strokeOpacity: 0
-			}
+				fillColor: "#ffffff",
+				fillOpacity: 0.5,
+				strokeColor: "red",
+				strokeOpacity: 0.5,
+				graphicName: "triangle",
+				pointRadius: 8
+			},
+			selectStyle: {
+				fillColor: "yellow",
+				fillOpacity: 0.5,
+				strokeColor: "red",
+				strokeOpacity: 0.5,
+				graphicName: "triangle",
+				pointRadius: 9
+			},
+			maxFeatures: 2000
 		},
 
 		/**
@@ -142,14 +163,15 @@ var app = new gxp.Viewer({
 			alwaysDisplayOnMap: true, // Always show the vector layer on the map, no button in the grid toolbar
 			outputConfig: {
 				id: "grid",
-				title: "Results",
-				loadMask: true,
+				title: "Query Results",
+				loadMask: true
 			},
 			controlOptions: {
 				multiple: true,
 				toggle: true
 			},
-			outputTarget: "southpanel",
+			showExportCSV: true,
+			outputTarget: "southpanel"
 /*
 				columns: {
 						FIRST: "First Name",
@@ -189,6 +211,7 @@ var app = new gxp.Viewer({
 		 * Feature Manager - Same kind of feature manager as before,
 		 * but this one will be used in the feature intersection tool.
 		 */
+/*
 		{
 			ptype: "gxp_featuremanager",
 			id: "intersection_fm",
@@ -196,6 +219,7 @@ var app = new gxp.Viewer({
 			autoSetLayer: true,
 			autoLoadFeatures: true
 		},
+*/
 
 		/**
 		 * Feature Intersection - Tool that will use the geometry of
@@ -204,6 +228,7 @@ var app = new gxp.Viewer({
 		 * handle selecting features from the map to use as filtering
 		 * parameters.
 		 */
+/*
 		{
 			ptype: "gxp_featureintersection",
 			id: "featureintersection",
@@ -213,6 +238,7 @@ var app = new gxp.Viewer({
 				toggle: true
 			}
 		},
+*/
 	
 		/**
 		 * OpenCOP Query Form Panel - A customized version of the standard
@@ -236,10 +262,9 @@ var app = new gxp.Viewer({
 					ref: "dateFilter",
 					fieldsetTitle: "Filter by date",
 					config: {
-						dateAttribute: "ArrestDate",
+						dateAttribute: "Arrest_Date_Time"
 						//defaultDate: "now"
 					}
-					//process: "datefeature"
 				},
 /*
 				{
@@ -250,10 +275,11 @@ var app = new gxp.Viewer({
 				},
 */
 				{
-					xtype: "gxp_radiusfilterpanel",
+					xtype: "gxp_radiusfilterpanelwithgeocode",
 					ref: "radiusFilter",
 					fieldsetTitle: "Filter by radius",
-					process: "bufferfeature"
+					process: "bufferfeature",
+					defaultRadius: 2
 				},
 				{
 					xtype: "gxp_attributefilterpanel",
@@ -264,45 +290,79 @@ var app = new gxp.Viewer({
 							{
 								name: "FIRST",
 								label: "First Name",
-								type: "string"
+								type: "textfield"
 							},
 							{
 								name: "LAST",
 								label: "Last Name",
-								type: "string"
+								type: "textfield"
 							},
 							{
-								name: "STREET_NUM",
+								name: "RACE",
+								label: "Race",
+								type: "textfield"
+							},
+							{
+								name: "SEX",
+								label: "Sex",
+								type: "textfield"
+							},
+							{
+								name: "DOB",
+								label: "DOB",
+								type: "datefield"
+							},
+							{
+								name: "CCN",
+								label: "Last Name",
+								type: "numberfield"
+							},
+							{
+								name: "ATN",
+								label: "Last Name",
+								type: "numberfield"
+							},
+							{
+								name: "STREET_NUMBER",
 								label: "Street No",
-								type: "string"
+								type: "textfield"
 							},
 							{
-								name: "STREET_NAM",
+								name: "STREET_NAME",
 								label: "Street",
-								type: "string"
+								type: "textfield"
 							},
 							{
 								name: "CITY",
 								label: "City",
-								type: "string"
+								type: "textfield"
 							},
 							{
 								name: "STATE",
 								label: "State",
-								type: "string"
+								type: "textfield"
 							},
 							{
 								name: "GRID",
 								label: "Grid",
-								type: "number"
+								type: "numberfield"
 							}
 						]
 					}
 					//process: "datefeature"
 				}
 			]
+		},
+		{
+			ptype: "gxp_layertree",
+			outputConfig: {
+				id: "tree",
+				border: true,
+				title: "Layers",
+				tbar: [] // add buttons to "tree.bbar" later
+			},
+			outputTarget: "westpanel"
 		}
-	
 	],
     
 	/*
@@ -341,15 +401,7 @@ var app = new gxp.Viewer({
 		},
 		osm: {
 			ptype: "gxp_osmsource"
-		},
-/*
-		noaa: {
-			ptype: "gxp_wmssource",
-			title: "NOAA Hurricane",
-			url: "http://services.ogc.noaa.gov/geoserver/nhc/wms",
-			version: "1.3.0"
 		}
-*/
 	},
     
 	// map and layers
@@ -357,8 +409,16 @@ var app = new gxp.Viewer({
 		id: "mymap", // id needed to reference map in portalConfig above
 		projection: "EPSG:900913",
 		//center: [-10764594.758211, 4523072.3184791],
-		center: [-10260000.758211, 3633072.3184791],
-		zoom: 7,
+		center: [-10020000, 3456000],
+		zoom: 9,
+		//maxExtent: [-10503310.61577,3324531.32344,-9859850.98707,3933519.90060],
+		//restrictedExtent: [-10503310.61577,3324531.32344,-9859850.98707,3933519.90060],
+		//maxExtent: [-20037508,-20037508,20037508,20037508],
+		//maxExtent: [-1.04688395642358,3357106.1917930474,-9880533.61799454,3897899.8140160986],
+		//restrictedExtent: [-120,29,-10,33],
+		tbar: {
+			id: "geocoder"
+		},
 		layers: [
 			{
 				source: "local",
@@ -368,23 +428,20 @@ var app = new gxp.Viewer({
 			{
 				source: "local",
 				name: "LA:parishes_ldotd_2007",
-				visibility: false,
-				selected: true
+				visibility: true,
+				selected: false
 			},
 
 			/**
 			 * Background layers
 			 */
+/*
 			{
 				source: "osm",
 				name: "mapnik",
 				group: "background"
 			},
-			{
-				source: "google",
-				name: "ROADMAP",
-				group: "background"
-			},
+*/
 			{
 				source: "google",
 				name: "TERRAIN",
@@ -400,6 +457,11 @@ var app = new gxp.Viewer({
 				name: "HYBRID",
 				group: "background"
 			},
+			{
+				source: "google",
+				name: "ROADMAP",
+				group: "background"
+			}
 		],
 		items: [
 			{
@@ -409,5 +471,4 @@ var app = new gxp.Viewer({
 			}
 		]
 	}
-
 });

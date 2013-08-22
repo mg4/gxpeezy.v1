@@ -55,7 +55,7 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
     /** api: config[showExportCSV]
      *  ``Boolean`` If set to true, show CSV export bottons.
      */
-    showExportCSV: true,    
+    showExportCSV: false,    
     
     /** api: config[displayMode]
      *  ``String`` Should we display all features on the map, or only the ones
@@ -276,14 +276,13 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
                     featureManager[pressed ? "showLayer" : "hideLayer"](this.id, this.displayMode);
                 },
                 scope: this
-            }] : [])).concat(["->"].concat(this.showExportCSV ? [
-/*
-		{
+            }] : [])).concat(["->"].concat(this.showExportCSV ? [{
                 text: this.displayExportCSVText,
                 xtype: 'button',
                 disabled: true,
                 iconCls: "gxp-icon-csvexport",
                 ref: "../exportCSVButton",
+/*
                 menu:{
                     xtype: "menu",
                     showSeparator: true, 
@@ -297,22 +296,15 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
                     },{
                         iconCls: "gxp-icon-csvexport-multiple",
                         text: this.exportCSVMultipleText,
-                        handler: function() {                    
-                            this.csvExport(false);
-                        },
-                        scope: this
-                    }]
-                }},
 */
-		{
-                    xtype: "button",
-                        iconCls: "gxp-icon-csvexport-single",
-                	text: this.displayExportCSVText,
-                	ref: "../exportCSVButton",
                         handler: function() {                    
                             this.csvExport(false);
                         },
                         scope: this
+/*
+                    }]
+                }
+*/
             }] : [])),
             listeners: {
                 "added": function(cmp, ownerCt) {
@@ -392,7 +384,8 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
         
         allPage.extent = featureManager.getPagingExtent("getMaxExtent");
         
-        var filter = featureManager.setPageFilter(single ? featureManager.page : allPage);
+        //var filter = featureManager.setPageFilter(single ? featureManager.page : allPage);
+        var filter = featureManager.filter;
         
         var node = new OpenLayers.Format.Filter({
             version: protocol.version,
@@ -400,6 +393,7 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
         }).write(filter);
         
         this.xml = new OpenLayers.Format.XML().write(node);
+	console.log(node);
         
         var colModel = grid.getColumnModel();
         
@@ -411,7 +405,7 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
         }
         
         this.url =  protocol.url +
-                    "?propertyName=" + propertyName.join(',') +
+                    "propertyName=" + propertyName.join(',') +
                     "&service=WFS" +
                     "&version=" + protocol.version +
                     "&request=GetFeature" +

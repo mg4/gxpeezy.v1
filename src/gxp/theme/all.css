@@ -253,6 +253,11 @@
     background-image: url(img/silk/cursor.png);
 }
 
+/* gxp_help */
+.x-btn .gxp-icon-help, .x-tree-node .gxp-icon-help { 
+    background-image: url(img/silk/help.png);
+}
+
 /* gxp_zoomtoextent */
 .x-btn .gxp-icon-zoomtoextent, .x-tree-node .gxp-icon-zoomtoextent { 
     background-image: url(img/silk/arrow_inout.png);

@@ -108,6 +108,7 @@ gxp.form.GoogleGeocoderComboBox = Ext.extend(Ext.form.ComboBox, {
     /** private: method[prepGeocoder]
      */
     prepGeocoder: function() {
+
         var geocoder = new google.maps.Geocoder();
         
 
@@ -134,6 +135,7 @@ gxp.form.GoogleGeocoderComboBox = Ext.extend(Ext.form.ComboBox, {
         }).createDelegate(this);
         
         proxy.doRequest = function(action, rs, params, reader, callback, scope, options) {
+
             // Assumes all actions read.
             geocoder.geocode(
                 {address: params.query, bounds: getBounds()},

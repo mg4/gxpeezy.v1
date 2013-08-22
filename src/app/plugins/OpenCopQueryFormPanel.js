@@ -38,6 +38,7 @@ opencop.plugins.OpenCopQueryFormPanel = Ext.extend(gxp.plugins.QueryForm, {
 
 		// I cannot dereference this.
 		var target = this.target;
+		var map = this.target.mapPanel.map;
 
 		// If filterPanels isn't defined, default it to an empty array.
 		this.filterPanels = this.filterPanels || [];
@@ -48,22 +49,31 @@ opencop.plugins.OpenCopQueryFormPanel = Ext.extend(gxp.plugins.QueryForm, {
 			border: false,
 			bodyStyle: "padding: 10px",
 			layout: "form",
-			width: 320,
-			autoScroll: false,
+			width: 375,
+			autoScroll: true,
 			items: [],
 			bbar: [
 				"->",
 				{
-					text: this.cancelButtonText,
+					text: "Clear",
 					iconCls: "cancel",
 					handler: function() {
-						var ownerCt = this.outputTarget ? queryForm.ownerCt : queryForm.ownerCt.ownerCt;
-						if (ownerCt && ownerCt instanceof Ext.Window) {
-							ownerCt.hide();
-						}
+						for (var i = 0; i < filterPanels.length; i++) {
+							var fieldset = queryForm[getFieldsetRef(filterPanels[i].ref)];
 
-						addFilterBuilder(featureManager, featureManager.layerRecord, featureManager.schema);
-						featureManager.loadFeatures();
+							// look for the removeLayer method defined for a fieldset
+							// and use it to remove the produced layer
+							if(typeof fieldset[filterPanels[i].ref].removeLayer !== 'undefined') {
+								fieldset[filterPanels[i].ref].removeLayer();
+							}
+
+							// look for the clearFields method defined for a fieldset
+							// and use it to clear the contents of the fields
+							if(typeof fieldset[filterPanels[i].ref].clearFields !== 'undefined') {
+								fieldset[filterPanels[i].ref].clearFields();
+							}
+						}
+						featureManager.clearFeatures();
 					}
 				},
 				{
@@ -75,19 +85,24 @@ opencop.plugins.OpenCopQueryFormPanel = Ext.extend(gxp.plugins.QueryForm, {
 						// Add our custom filters to the filter list
 						for (var i = 0; i < filterPanels.length; i++) {
 							var fieldset = queryForm[getFieldsetRef(filterPanels[i].ref)];
-							if (fieldset.collapsed !== true) {
+
+							if (fieldset[filterPanels[i].ref].getFilters().length > 0) {
 								filters.push.apply(filters, fieldset[filterPanels[i].ref].getFilters());
 							}
 						}
-					
-						featureManager.loadFeatures(
-							filters.length > 1 ?
-							new OpenLayers.Filter.Logical({
-								type: OpenLayers.Filter.Logical.AND,
-								filters: filters
-							}) :
-							filters[0]
-						);
+
+						if(filters.length > 0) {
+							featureManager.loadFeatures(
+								filters.length > 1 ?
+								new OpenLayers.Filter.Logical({
+									type: OpenLayers.Filter.Logical.AND,
+									filters: filters
+								}) :
+								filters[0]
+							);
+						} else {
+							Ext.Msg.alert("Filters Needed", "You must add filters in order to query attributes.");
+						}
 					},
 					scope: this
 				}

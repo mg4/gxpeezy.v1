@@ -1,8 +1,6 @@
 
 /**
- * @require OpenLayers/Handler/Point.js
- * @require OpenLayers/Handler/Path.js
- * @require OpenLayers/Handler/Polygon.js
+ * @require widgets/form/ExtendedDateField.js
  */
 
 /** api: (define)
@@ -89,7 +87,7 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					{
 						xtype: "label",
 						text: "Start Date:",
-						style: "padding-left: 5px; padding-top: 0.3em"
+						style: "padding-left: 5px; padding-top: 0.3em; width: 75px;"
 					},
 					// Date input field for the start date value
 					{
@@ -100,7 +98,8 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 						allowBlank: true,
 						value: this.defaultDate
 					}
-				]
+				],
+				style: "padding: 2px 0;"
 			},
 			// composite field for end date
 			{
@@ -110,7 +109,7 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					{
 						xtype: "label",
 						text: "End Date:",
-						style: " padding-left: 10px; padding-top: 0.3em"
+						style: " padding-left: 5px; padding-top: 0.3em; width: 75px;"
 					},
 					// Date input field for the end date value
 					{
@@ -120,7 +119,8 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 						fieldLabel: "EndDate",
 						allowBlank: true
 					}
-				]
+				],
+				style: "padding: 2px 0;"
 			}
 		];
 
@@ -163,7 +163,7 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 	getFilters: function() {
 		var filters = [];
 
-		if(this.endDateField.getValue()) {
+		if(this.startDateField.getValue() && this.endDateField.getValue()) {
 			// date attribute is between start and end date
 			filters.push(new OpenLayers.Filter.Comparison(
 				{
@@ -173,7 +173,7 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					upperBoundary: this.formatDateForQuery(this.endDateField.getValue())
 				}
 			));
-		} else {
+		} else if(this.startDateField.getValue()) {
 			// date attribute is after start date
 			filters.push(new OpenLayers.Filter.Comparison(
 				{
@@ -182,10 +182,25 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					value: this.formatDateForQuery(this.startDateField.getValue())
 				}
 			));
+		} else if(this.endDateField.getValue()) {
+			// date attribute is before end date
+			filters.push(new OpenLayers.Filter.Comparison(
+				{
+					type: OpenLayers.Filter.Comparison.LESS_THAN_OR_EQUAL_TO,
+					property: this.dateAttribute,
+					value: this.formatDateForQuery(this.endDateField.getValue())
+				}
+			));
 		}
 
 		return filters;
 	},
+
+	// clear the fields
+	clearFields: function() {
+		this.startDateField.setValue("");
+		this.endDateField.setValue("");
+	}
 });
 
 /** api: xtype = gxp_datefilterpanel */
