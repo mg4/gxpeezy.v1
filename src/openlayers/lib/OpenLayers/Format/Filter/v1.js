@@ -485,7 +485,8 @@ OpenLayers.Format.Filter.v1 = OpenLayers.Class(OpenLayers.Format.XML, {
         "WITHIN": "WITHIN",
         "CONTAINS": "CONTAINS",
         "INTERSECTS": "INTERSECTS",
-        "FID": "FeatureId"
+        "FID": "FeatureId",
+        "FUNCTION": "Function"
     },
 
     CLASS_NAME: "OpenLayers.Format.Filter.v1" 

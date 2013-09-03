@@ -46,27 +46,73 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 		// Use composite fields to align and place in seperate rows.
 		this.items = [];
 		for(var i=0; i<this.attributes.length; i++) {
+            var compositeFieldItems = [
+                // Label for attribute
+                {
+                    xtype: "label",
+                    text: this.attributes[i].label + ":",
+                    style: "padding-left: 5px; padding-top: 0.3em; width: 75px; text-alight: right"
+                }
+            ];
+
+            if (this.attributes[i].type == "yearrange") {
+                compositeFieldItems.push({
+                    xtype: "numberfield",
+                    name: this.attributes[i].name + "_start",
+                    ref: "../" + this.attributes[i].name + "_start",
+                    fieldLabel: this.attributes[i].name + "_start",
+                    allowDecimals: false,
+                    allowNegative: false,
+                    minLength: 4,
+                    maxLength: 4,
+                    width: 49
+                });
+                compositeFieldItems.push({
+                    xtype: "label",
+                    text: "to"
+                });
+                compositeFieldItems.push({
+                    xtype: "numberfield",
+                    name: this.attributes[i].name + "_end",
+                    ref: "../" + this.attributes[i].name + "_end",
+                    fieldLabel: this.attributes[i].name + "_end",
+                    allowDecimals: false,
+                    allowNegative: false,
+                    minLength: 4,
+                    maxLength: 4,
+                    width: 49
+                });
+            } else {
+                compositeFieldItems.push({
+                    // Field for attribute filter
+                    xtype: this.attributes[i].type,
+                    name: this.attributes[i].name,
+                    ref: "../" + this.attributes[i].name,
+                    fieldLabel: this.attributes[i].name,
+                    mode: "local",
+                    valueField: "myId",
+                    displayField: "displayText",
+                    editable: true,
+                    forceSelection: true,
+                    autoSelect: true,
+                    typeAhead: true,
+                    triggerAction: 'all',
+                    store: new Ext.data.ArrayStore({
+                        fields: [
+                            'myId',
+                            'displayText'
+                        ],
+                        data: this.attributes[i].choices
+                    }),
+                    width: 120
+                    //allowBlank: false
+                });
+            }
 			this.items.push(
 				{
 					xtype: "compositefield",
 					//width: 400,
-					items: [
-						// Label for attribute
-						{
-							xtype: "label",
-							text: this.attributes[i].label + ":",
-							style: "padding-left: 5px; padding-top: 0.3em; width: 75px; text-alight: right"
-						},
-						// Field for attribute filter
-						{
-							xtype: this.attributes[i].type,
-							name: this.attributes[i].name,
-							ref: "../" + this.attributes[i].name,
-							fieldLabel: this.attributes[i].name
-							//allowBlank: false
-						}
-				
-					],
+					items: compositeFieldItems,
 					style: "padding: 2px 0;"
 				}
 			);
@@ -114,15 +160,30 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 		var value, type;
 		for(var i=0; i<this.attributes.length; i++) {
 			type = this.attributes[i].type;
+
+            if (type == "yearrange") {
+                Array.prototype.push.apply(filters, this.getYearRangeFilter(i));
+                continue;
+            }
+
 			value = this[this.attributes[i].name].getValue();
 			if(value) {
-				if(type == "numberfield" || type == "datefield") {
-					// defualt to EQUAL_TO for number filter
+				if(type == "numberfield") {
+					// default to EQUAL_TO for number filter
 					filters.push(new OpenLayers.Filter.Comparison(
 						{
 							type: OpenLayers.Filter.Comparison.EQUAL_TO,
 							property: this.attributes[i].name,
 							value: this[this.attributes[i].name].getValue()
+						}
+					));
+                } else if(type == "datefield") {
+                    // Use the dateParse function
+					filters.push(new OpenLayers.Filter.Comparison(
+						{
+							type: OpenLayers.Filter.Comparison.EQUAL_TO,
+							property: this.attributes[i].name,
+							value: this.formatDateForQuery( this[this.attributes[i].name].getValue() )
 						}
 					));
 				} else {
@@ -142,9 +203,69 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
 		return filters;
 	},
 
+    getYearRangeFilter: function(i) {
+        var startValue = this[this.attributes[i].name + "_start"].getValue();
+        var endValue = this[this.attributes[i].name + "_end"].getValue();
+
+        if (!startValue && !endValue) { 
+            return [];
+        }
+
+        var startDate, endDate;
+
+        if (startValue && endValue) {
+            startDate = new Date(startValue, 0, 1, 0, 0, 0, 0);
+            endDate = new Date(endValue + 1, 0, 1, 0, 0, 0, 0);
+        } else if (startValue) {
+            startDate = new Date(startValue, 0, 1, 0, 0, 0, 0);
+            endDate = new Date(startValue + 1, 0, 1, 0, 0, 0, 0);
+        } else if (endValue) {
+            startDate = new Date(endValue, 0, 1, 0, 0, 0, 0);
+            endDate = new Date(endValue + 1, 0, 1, 0, 0, 0, 0);
+        }
+
+        var filters = [];
+        if (startDate && endDate) {
+			// date attribute is after start date
+			filters.push(new OpenLayers.Filter.Comparison(
+				{
+					type: OpenLayers.Filter.Comparison.GREATER_THAN_OR_EQUAL_TO,
+					property: this.attributes[i].name,
+					value: this.formatDateForQuery(startDate)
+				}
+			));
+
+			// date attribute is before end date
+			filters.push(new OpenLayers.Filter.Comparison(
+				{
+					type: OpenLayers.Filter.Comparison.LESS_THAN,
+					property: this.attributes[i].name,
+					value: this.formatDateForQuery(endDate)
+				}
+			));
+         }
+         return filters;
+    },
+    
+    // Used to format the datetime returned from the datetime fields to the correct format needed in the query
+	formatDateForQuery: function(datestamp) {
+		var d = new Date(datestamp);
+        var formattedDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "T" + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+
+        return new OpenLayers.Filter.Function({
+            name: "dateParse",
+            params: ["yyyy-MM-dd'T'HH:mm:ss", formattedDate]
+        });
+	},
+
 	clearFields: function() {
 		for(var i=0; i<this.attributes.length; i++) {
-			this[this.attributes[i].name].setValue("");
+            if (this.attributes[i].type == "yearrange") {
+                this[this.attributes[i].name + "_start"].setValue("");
+                this[this.attributes[i].name + "_end"].setValue("");
+            } else {
+                this[this.attributes[i].name].setValue("");
+            }
 		}
 	}
 });

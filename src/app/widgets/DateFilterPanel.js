@@ -40,7 +40,13 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 	// Used to format the datetime returned from the datetime fields to the correct format needed in the query
 	formatDateForQuery: function(datestamp) {
 		var d = new Date(datestamp*1000);
-		return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "T" + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+
+        var formattedDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "T" + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+        
+        return new OpenLayers.Filter.Function({
+            name: "dateParse",
+            params: ["yyyy-MM-dd'T'HH:mm:ss", formattedDate]
+        });
 	},
 
 	// Used to format the datetime defaulted to the datetime fields
@@ -163,6 +169,7 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 	getFilters: function() {
 		var filters = [];
 
+        /*
 		if(this.startDateField.getValue() && this.endDateField.getValue()) {
 			// date attribute is between start and end date
 			filters.push(new OpenLayers.Filter.Comparison(
@@ -173,7 +180,9 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					upperBoundary: this.formatDateForQuery(this.endDateField.getValue())
 				}
 			));
-		} else if(this.startDateField.getValue()) {
+		} else 
+        */
+        if(this.startDateField.getValue()) {
 			// date attribute is after start date
 			filters.push(new OpenLayers.Filter.Comparison(
 				{
@@ -182,7 +191,8 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					value: this.formatDateForQuery(this.startDateField.getValue())
 				}
 			));
-		} else if(this.endDateField.getValue()) {
+		} //else 
+        if(this.endDateField.getValue()) {
 			// date attribute is before end date
 			filters.push(new OpenLayers.Filter.Comparison(
 				{

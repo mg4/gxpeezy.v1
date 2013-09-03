@@ -49,17 +49,18 @@ var app = new gxp.Viewer({
 			{
 				id: "westpanel",
 				xtype: "panel",
-				layout: "accordion",
+				layout: "fit",
 				region: "west",
 				width: 375,
-				title: "<< Options",
+                border: true,
+				title: "<< Filters",
 				titleCollapse: true,
 				collapsible: true,
 				//collapsed: true,
 				//forceLayout: true,
 				//collapseMode: "mini",
 				//hideCollapseTool: true,
-				split: true,
+				//split: true,
 				//floating: true,
 				animCollapse: true
 				//activeItem: "queryformpanel"
@@ -71,6 +72,9 @@ var app = new gxp.Viewer({
 				layout: "fit",
 				region: "south",
 				border: false,
+				titleCollapse: true,
+				collapsible: true,
+				split: true,
 				height: 200
 			}
 		]
@@ -84,13 +88,18 @@ var app = new gxp.Viewer({
 			featureManager: "featuremanager",
 			menuText: "Zoom to selected features"
 		},
+        /*
 		{
 			ptype: "gxp_wmsgetfeatureinfo",
 			format: "grid",
-			actionTarget: "map.tbar"
+			actionTarget: "map.tbar",
+            controlOptions: {
+                queryVisible: false
+            }
 			//defaultAction: 0,
 			//autoActivate: true
 		},
+        */
 /*
 		{
 			ptype: "gxp_addlayers",
@@ -131,18 +140,18 @@ var app = new gxp.Viewer({
 			//autoSetLayer: true,
 			//autoLoadFeatures: true,
 			symbolizer: {
-				fillColor: "#ffffff",
-				fillOpacity: 0.5,
+				fillColor: "blue",
+				fillOpacity: 1,
 				strokeColor: "red",
-				strokeOpacity: 0.5,
+				strokeOpacity: 1,
 				graphicName: "triangle",
 				pointRadius: 8
 			},
 			selectStyle: {
 				fillColor: "yellow",
-				fillOpacity: 0.5,
+				fillOpacity: 1,
 				strokeColor: "red",
-				strokeOpacity: 0.5,
+				strokeOpacity: 1,
 				graphicName: "triangle",
 				pointRadius: 9
 			},
@@ -171,6 +180,7 @@ var app = new gxp.Viewer({
 				toggle: true
 			},
 			showExportCSV: true,
+            displayExportCSVText: "Export to Excel",
 			outputTarget: "southpanel"
 /*
 				columns: {
@@ -253,16 +263,16 @@ var app = new gxp.Viewer({
 			actionTarget: null,
 			//actionTarget: ["map.tbar"],
 			outputConfig: {
-				title: "Filters"
+				title: null
 			},
 			outputTarget: "westpanel",
 			filterPanels: [
 				{
 					xtype: "gxp_datefilterpanel",
 					ref: "dateFilter",
-					fieldsetTitle: "Filter by date",
+					fieldsetTitle: "Filter by arrest date",
 					config: {
-						dateAttribute: "Arrest_Date_Time"
+						dateAttribute: "ARREST_DATE_TIME"
 						//defaultDate: "now"
 					}
 				},
@@ -300,26 +310,35 @@ var app = new gxp.Viewer({
 							{
 								name: "RACE",
 								label: "Race",
-								type: "textfield"
+								type: "combo",
+                                choices: [
+                                    ["W", "White"],
+                                    ["B", "Black"],
+                                    ["A", "Asian"]
+                                ]
 							},
-							{
-								name: "SEX",
-								label: "Sex",
-								type: "textfield"
-							},
+                            {
+                                name: "SEX",
+                                label: "Sex",
+                                type: "combo",
+                                choices: [
+                                    ["M", "Male"],
+                                    ["F", "Female"]
+                                ]
+                            },
 							{
 								name: "DOB",
-								label: "DOB",
-								type: "datefield"
+								label: "Year of Birth",
+								type: "yearrange"
 							},
 							{
 								name: "CCN",
-								label: "Last Name",
+								label: "CCN",
 								type: "numberfield"
 							},
 							{
 								name: "ATN",
-								label: "Last Name",
+								label: "ATN",
 								type: "numberfield"
 							},
 							{
@@ -329,7 +348,7 @@ var app = new gxp.Viewer({
 							},
 							{
 								name: "STREET_NAME",
-								label: "Street",
+								label: "Street Name",
 								type: "textfield"
 							},
 							{
@@ -352,7 +371,8 @@ var app = new gxp.Viewer({
 					//process: "datefeature"
 				}
 			]
-		},
+		}
+        /*,
 		{
 			ptype: "gxp_layertree",
 			outputConfig: {
@@ -363,6 +383,7 @@ var app = new gxp.Viewer({
 			},
 			outputTarget: "westpanel"
 		}
+        */
 	],
     
 	/*
@@ -372,34 +393,33 @@ var app = new gxp.Viewer({
 	 * most likely be running on port 9080 and GeoExplorer will most likely
 	 * be on 8080.
 	 */
-	//proxy: "/geoexplorer/proxy?url=",
+	//proxy: "/geoexplorer/proxy/?url=",
 	
 	/**
 	 * If the GeoServer proxy is working properly, you can use that one
 	 * instead and it will work in debug and deployed modes.
 	 */
-	//proxy: "/geoserver/rest/proxy?url=",
+	proxy: "/geoserver/rest/proxy?url=",
 	
 	/**
 	 * The GXP SDK has a built-in proxy when in debug mode but not when
 	 * deployed.
 	 */
-	proxy: "/proxy/?url=",
+	//proxy: "/proxy/?url=",
 	
 	defaultSourceType: "gxp_wmssource",
 	
 	// layer sources
 	sources: {
-		local: {
-			ptype: "gxp_wmscsource",
-			//title: "StateBook",
+		"local": {
+			ptype: "gxp_wmssource",
 			url: "/geoserver/wms",
 			version: "1.1.1"
 		},
 		"google": {
 			ptype: "gxp_googlesource"
 		},
-		osm: {
+		"osm": {
 			ptype: "gxp_osmsource"
 		}
 	},
@@ -421,27 +441,28 @@ var app = new gxp.Viewer({
 		},
 		layers: [
 			{
-				source: "local",
-				name: "JPSO:ARMMS",
-				selected: true
+				source: "osm",
+				name: "mapnik",
+				group: "background"
 			},
 			{
 				source: "local",
 				name: "LA:parishes_ldotd_2007",
 				visibility: true,
-				selected: false
+				selected: false,
+				group: "default"
+			},
+			{
+				source: "local",
+				name: "JPSO:ARMMS",
+				visibility: false,
+				selected: true
 			},
 
 			/**
 			 * Background layers
 			 */
 /*
-			{
-				source: "osm",
-				name: "mapnik",
-				group: "background"
-			},
-*/
 			{
 				source: "google",
 				name: "TERRAIN",
@@ -462,6 +483,7 @@ var app = new gxp.Viewer({
 				name: "ROADMAP",
 				group: "background"
 			}
+            */
 		],
 		items: [
 			{
@@ -472,3 +494,4 @@ var app = new gxp.Viewer({
 		]
 	}
 });
+

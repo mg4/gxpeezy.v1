@@ -234,6 +234,7 @@ gxp.RadiusFilterPanelWithGeocode = Ext.extend(Ext.Panel, {
 				if (bufferedFeature) {
 					layer.addFeatures([bufferedFeature]);
 					layer.selectedFeatures = [bufferedFeature];
+                    layer.map.zoomToExtent(bufferedFeature.geometry.getBounds());
 				}
 			}
 		);

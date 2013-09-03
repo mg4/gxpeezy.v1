@@ -151,7 +151,7 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
                 }
                 var control = new OpenLayers.Control.WMSGetFeatureInfo(Ext.applyIf({
                     url: layer.url,
-                    queryVisible: true,
+                    queryVisible: false,
                     layers: [layer],
                     infoFormat: infoFormat,
                     vendorParams: vendorParams,

@@ -93,7 +93,8 @@ gxp.plugins.OSMSource = Ext.extend(gxp.plugins.LayerSource, {
             numZoomLevels: 19,
             units: "m",
             buffer: 1,
-            transitionEffect: "resize"
+            transitionEffect: "resize",
+            isBaseLayer: true
         };
         
         var layers = [
