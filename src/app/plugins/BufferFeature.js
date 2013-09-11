@@ -57,7 +57,8 @@ gxp.plugins.BufferFeature = Ext.extend(gxp.plugins.Tool, {
 				process: this.process.name,
 				inputs: {
 					geom: feature.geometry,
-					distance: radius
+					distance: radius,
+                    quadrantSegments: 5
 				},
 				success: function(outputs) {
 					// The buffer process should return at most 1 feature.

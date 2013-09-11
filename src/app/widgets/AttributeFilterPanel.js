@@ -207,12 +207,13 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
         var startValue = this[this.attributes[i].name + "_start"].getValue();
         var endValue = this[this.attributes[i].name + "_end"].getValue();
 
+        // Neither start nor end years are set, return no filter
         if (!startValue && !endValue) { 
             return [];
         }
 
+        // Convert the string year into a date object, using the same start and end if only one is set
         var startDate, endDate;
-
         if (startValue && endValue) {
             startDate = new Date(startValue, 0, 1, 0, 0, 0, 0);
             endDate = new Date(endValue + 1, 0, 1, 0, 0, 0, 0);
@@ -224,6 +225,7 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
             endDate = new Date(endValue + 1, 0, 1, 0, 0, 0, 0);
         }
 
+        // Get the ogc filters for the year range
         var filters = [];
         if (startDate && endDate) {
 			// date attribute is after start date
@@ -249,12 +251,12 @@ gxp.AttributeFilterPanel = Ext.extend(Ext.Panel, {
     
     // Used to format the datetime returned from the datetime fields to the correct format needed in the query
 	formatDateForQuery: function(datestamp) {
-		var d = new Date(datestamp);
-        var formattedDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "T" + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+		var d = new Date(datestamp - 1); // A mystery day gets added so remove it
+        var formattedDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
 
         return new OpenLayers.Filter.Function({
             name: "dateParse",
-            params: ["yyyy-MM-dd'T'HH:mm:ss", formattedDate]
+            params: ["yyyy-MM-dd", formattedDate]
         });
 	},
 

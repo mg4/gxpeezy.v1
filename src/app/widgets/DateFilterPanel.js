@@ -39,20 +39,20 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 	
 	// Used to format the datetime returned from the datetime fields to the correct format needed in the query
 	formatDateForQuery: function(datestamp) {
-		var d = new Date(datestamp*1000);
+		var d = new Date(datestamp);
 
-        var formattedDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "T" + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+        var formattedDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
         
         return new OpenLayers.Filter.Function({
             name: "dateParse",
-            params: ["yyyy-MM-dd'T'HH:mm:ss", formattedDate]
+            params: ["yyyy-MM-dd", formattedDate]
         });
 	},
 
 	// Used to format the datetime defaulted to the datetime fields
 	formatDateForFieldset: function(date) {
 		var d = new Date(date);
-		return d.getTime()/1000;
+		return d.getTime();
 	},
 
 	// This panel should not have a border by default.
@@ -97,11 +97,12 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					},
 					// Date input field for the start date value
 					{
-						xtype: "gxp_datetimefield",
+						xtype: "datefield",
 						name: "startdate",
 						ref: "../startDateField",
 						fieldLabel: "StartDate",
 						allowBlank: true,
+                        width: 120,
 						value: this.defaultDate
 					}
 				],
@@ -119,10 +120,11 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 					},
 					// Date input field for the end date value
 					{
-						xtype: "gxp_datetimefield",
+						xtype: "datefield",
 						name: "enddate",
 						ref: "../endDateField",
 						fieldLabel: "EndDate",
+                        width: 120,
 						allowBlank: true
 					}
 				],
@@ -188,7 +190,7 @@ gxp.DateFilterPanel = Ext.extend(Ext.Panel, {
 				{
 					type: OpenLayers.Filter.Comparison.GREATER_THAN_OR_EQUAL_TO,
 					property: this.dateAttribute,
-					value: this.formatDateForQuery(this.startDateField.getValue())
+					value: this.formatDateForQuery(this.startDateField.getValue() - 1) // Subtract a day that gets mysteriously added
 				}
 			));
 		} //else 

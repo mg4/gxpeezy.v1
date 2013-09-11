@@ -9,6 +9,7 @@
 /**
  * @requires plugins/ClickableFeatures.js
  * @include widgets/grid/FeatureGrid.js
+ * @include OpenLayers/Format/CQL.js
  */
 
 /** api: (define)
@@ -380,9 +381,9 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
         var featureManager = this.target.tools[this.featureManager];
         var grid = this.output[0];
         var protocol = grid.getStore().proxy.protocol;
-        var allPage = {};
+        //var allPage = {};
         
-        allPage.extent = featureManager.getPagingExtent("getMaxExtent");
+        //allPage.extent = featureManager.getPagingExtent("getMaxExtent");
         
         //var filter = featureManager.setPageFilter(single ? featureManager.page : allPage);
         var filter = featureManager.filter;
@@ -393,8 +394,8 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
         }).write(filter);
         
         this.xml = new OpenLayers.Format.XML().write(node);
-	console.log(node);
         
+/*       
         var colModel = grid.getColumnModel();
         
         var numColumns = colModel.getColumnCount(true);
@@ -402,8 +403,7 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
         
         for (var i=0; i<numColumns; i++){        
             propertyName.push(colModel.getColumnHeader(i));
-        }
-        
+        } 
         this.url =  protocol.url +
                     "propertyName=" + propertyName.join(',') +
                     "&service=WFS" +
@@ -411,12 +411,140 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
                     "&request=GetFeature" +
                     "&typeName=" + protocol.featureType +
                     "&exceptions=application/json" +
-                    "&outputFormat=CSV"
+                    "&outputFormat=CSV";
+*/
+/*      
+        this.queryString = OpenLayers.Util.getParameterString({
+            //propertyName: propertyName,
+            service: "WFS",
+            version: protocol.version,
+            request: "GetFeature",
+            typeName: protocol.featureType,
+            exceptions: "application/json",
+            outputFormat: "CSV",
+            filter: this.xml
+        });
+        this.url = OpenLayers.Util.urlAppend(protocol.url, this.queryString);
+*/
+        /*
+        this.cqlQueryString = OpenLayers.Util.getParameterString({
+            propertyName: propertyName,
+            service: "WFS",
+            version: protocol.version,
+            request: "GetFeature",
+            typeName: protocol.featureType,
+            exceptions: "application/json",
+            outputFormat: "CSV",
+            cql_filter: filter.toString()
+        });
+        this.queryUrl = OpenLayers.Util.urlAppend(protocol.url, this.cqlQueryString);
+        */
+        //debugger;
+/*
+        var opts2 = OpenLayers.Util.applyDefaults({
+            //propertyName: propertyName,
+            outputFormat: "CSV"//,
+            //filter: this.xml
+        }, protocol.options);
+        
+        var data = OpenLayers.Format.XML.prototype.write.apply(
+            protocol.format, [protocol.format.writeNode("wfs:GetFeature", opts2)]
+        );
+*/        
+        //window.open(this.url, "_blank");
+        /*
+        OpenLayers.Request.POST({
+            url: protocol.url,
+            data: data,
+            callback: function(request) {
+                if(request.status == 200){
+                    var win = window.open();
+                    win.document.open("text/csv");
+                    win.document.write(request.responseText);
+                    win.document.close();
+                }else{
+                    Ext.Msg.show({
+                        title: this.failedExportCSV,
+                        msg: request.statusText,
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
+            },
+            scope: this
+        });
+        */
+        
+        //        
+        //delete other iframes appended
+        //
+        /*
+        if(document.getElementById("downloadIFrame")) {
+            document.body.removeChild( document.getElementById("downloadIFrame") ); 
+        }
+        */
+        /*
+        //
+        //Create an hidden iframe for forced download
+        //
+        var elemIF = document.createElement("iframe"); 
+        elemIF.setAttribute("id","downloadIFrame");
 
+        //var mUrl = this.url + "&filter=" + this.xml;
+        //elemIF.src = mUrl; 
+        elemIF.style.display = "none"; 
+        document.body.appendChild(elemIF);
+        */
+        
+        // Use a form to download the csv file from GeoServer using POST.
+        // The query string is too long for GET.
+        if(document.getElementById("downloadForm")) {
+            document.body.removeChild( document.getElementById("downloadForm") ); 
+        }
+        // Create form
+        var f = document.createElement("form");
+        f.id = "downloadForm";
+        f.action = protocol.url;
+        f.target = "_self";
+        f.method = "POST";
+    
+        var opts = OpenLayers.Util.applyDefaults({
+            service: "WFS",
+            request: "GetFeature",
+            typeName: protocol.featureType,
+            //propertyName: propertyName,
+            outputFormat: "CSV"//,
+            //filter: this.xml
+        }, protocol.options);
+        
+        for (var key in opts) {
+            if (key == "filter" || key == "url" || key == "schema" || key == "multi") {
+                continue;
+            }
+        
+            var input = document.createElement("input");
+            input.type="hidden";
+            input.name  = key;
+            input.value = opts[key];
+            f.appendChild(input);
+        }
+        
+        var filterInput = document.createElement("textarea");
+        filterInput.name = "filter";
+        filterInput.value = this.xml;
+        f.appendChild(filterInput);
+       
+        document.body.appendChild(f);
+        //debugger;
+        f.submit(); 
+            
+            
+/*
         OpenLayers.Request.POST({
             url: this.url,
             data: this.xml,
             callback: function(request) {
+                var filter = this.target.tools[this.featureManager].filter;
 
                 if(request.status == 200){
                 
@@ -464,7 +592,7 @@ gxp.plugins.FeatureGrid = Ext.extend(gxp.plugins.ClickableFeatures, {
             },
             scope: this
         });        
-
+*/
     }
     
 });

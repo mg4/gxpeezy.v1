@@ -122,12 +122,15 @@ gxp.plugins.Help = Ext.extend(gxp.plugins.Tool, {
             //enableToggle: true,
             allowDepress: true,
             handler: function() {
+                window.open(window.location + '/' + this.htmlUrl);
+                /*
                 if(helpWindow.hidden) {
                     helpWindow.show();
                     helpWindow.toFront();
                 } else {
                     helpWindow.hide();
                 }
+                */
             },
             scope: this
         }]);

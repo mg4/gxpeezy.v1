@@ -20,6 +20,7 @@
  * @require plugins/BufferFeature.js
  * @require widgets/DateFilterPanel.js
  * @require widgets/AttributeFilterPanel.js
+ * @require widgets/LayerSelectorFilterPanel.js
  * @require widgets/RadiusFilterPanelWithGeocode.js
  * @require overrides/override-ext-ajax.js
  * @require plugins/WMSGetFeatureInfo.js
@@ -137,6 +138,7 @@ var app = new gxp.Viewer({
 			ptype: "gxp_featuremanager",
 			id: "featuremanager",
 			paging: false,
+            pagingType: gxp.plugins.FeatureManager.WFS_PAGING,
 			//autoSetLayer: true,
 			//autoLoadFeatures: true,
 			symbolizer: {
@@ -179,6 +181,7 @@ var app = new gxp.Viewer({
 				multiple: true,
 				toggle: true
 			},
+            showTotalResults: true,
 			showExportCSV: true,
             displayExportCSVText: "Export to Excel",
 			outputTarget: "southpanel"
@@ -289,7 +292,7 @@ var app = new gxp.Viewer({
 					ref: "radiusFilter",
 					fieldsetTitle: "Filter by radius",
 					process: "bufferfeature",
-					defaultRadius: 2
+					defaultRadius: 1
 				},
 				{
 					xtype: "gxp_attributefilterpanel",
@@ -365,11 +368,26 @@ var app = new gxp.Viewer({
 								name: "GRID",
 								label: "Grid",
 								type: "numberfield"
-							}
+							},
+                            {
+                                name: "ADDRESS_TYPE",
+                                label: "Address Type",
+                                type: "combo",
+                                choices: [
+                                    ["ARREST", "Arrest"],
+                                    ["HOME", "Home"]
+                                ]
+                            }
 						]
 					}
 					//process: "datefeature"
-				}
+				},
+				{
+					xtype: "gxp_layerselectorfilterpanel",
+					ref: "layerSelector",
+					fieldsetTitle: "Toggle Boundaries"
+                }
+                
 			]
 		}
         /*,
@@ -416,9 +434,11 @@ var app = new gxp.Viewer({
 			url: "/geoserver/wms",
 			version: "1.1.1"
 		},
-		"google": {
+		/*
+        "google": {
 			ptype: "gxp_googlesource"
 		},
+        */
 		"osm": {
 			ptype: "gxp_osmsource"
 		}
@@ -448,16 +468,31 @@ var app = new gxp.Viewer({
 			{
 				source: "local",
 				name: "LA:parishes_ldotd_2007",
+                title: "Parishes",
 				visibility: true,
-				selected: false,
-				group: "default"
+				selected: false
+			},
+			{
+				source: "local",
+				name: "JPSO:jpdistricts",
+                title: "Districts",
+				visibility: true,
+				selected: false
+			},
+			{
+				source: "local",
+				name: "JPSO:jpreporting_areas",
+                title: "Reporting Areas",
+				visibility: true,
+				selected: false
 			},
 			{
 				source: "local",
 				name: "JPSO:ARMMS",
 				visibility: false,
-				selected: true
-			},
+				selected: true,
+                group: "hidden"
+			}
 
 			/**
 			 * Background layers
